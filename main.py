@@ -6,14 +6,28 @@ import hashlib
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from typing import List, Optional
+from dotenv import load_dotenv
 import logging
 
 # --- Configuration ---
+load_dotenv()
+
 PCAP_DIRECTORIES_STR = os.getenv("PCAP_DIRECTORIES", "pcaps")
 PCAP_DIRECTORIES = [path.strip() for path in PCAP_DIRECTORIES_STR.split(',')]
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = 6379
+
+BASE_URL = os.getenv("BASE_URL")
+BASE_PORT = os.getenv("BASE_PORT")
+
+FULL_BASE_URL = None
+if BASE_URL:
+    if BASE_PORT:
+        FULL_BASE_URL = f"{BASE_URL}:{BASE_PORT}"
+    else:
+        FULL_BASE_URL = BASE_URL
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__) 
@@ -124,11 +138,12 @@ def scan_and_index(exclude_files: List[str] = None, base_url: str = None, target
                         file_hash = calculate_sha256(file_path)
                         pcap_key = f"pcap:file:{file_hash}"
 
-                        download_url = None
+                        if not base_url:
+                            base_url = FULL_BASE_URL or None
+
                         if base_url:
                             download_url = f"{base_url}/pcaps/download/{file_hash}"
 
-                       
                         pipe.hset(pcap_key, mapping={
                             "filename": filename,
                             "source_directory": pcap_dir,
