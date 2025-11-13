@@ -9,7 +9,7 @@ services:
       - ./pcaps:/app/pcaps
       - ./pcaps2:/app/pcaps2
     environment:
-      - PCAP_DIRECTORIES=/app/pcaps,/app/pcaps2
+      - PCAP_DIRECTORIES=/app/pcaps
       - REDIS_HOST=redis
       - LOG_LEVEL=INFO
     depends_on:
